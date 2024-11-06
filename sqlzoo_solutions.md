@@ -13,4 +13,11 @@ This was done because of my course of 'Data Bases 1'. Enjoy!
 8. [Using NULL](#using-null)
 9. [Self JOIN](#self-join)
 
-## Select Basics
+## SELECT Basics
+1.
+```sql
+SELECT population
+FROM world
+WHERE name='Germany'
+```
+
