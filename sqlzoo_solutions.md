@@ -304,8 +304,7 @@ ORDER BY subject IN ('chemistry', 'physics'), subject, winner
 ---
 
 ## SUM and COUNT
-1. 1.
-Show the total population of the world.
+1. Show the total population of the world.
 ```sql
 SELECT SUM(population)
 FROM world
@@ -364,3 +363,378 @@ HAVING SUM(population)>=100000000
 ---
 
 ## JOIN
+1. Modify it to show the matchid and player name for all goals scored by Germany. To identify German players, check for: teamid = 'GER'
+```sql
+SELECT matchid, player
+FROM goal 
+WHERE teamid='GER'
+```
+
+2. Show id, stadium, team1, team2 for just game 1012
+```sql
+SELECT id, stadium, team1, team2
+FROM game
+WHERE id=1012
+```
+
+3. Modify it to show the player, teamid, stadium and mdate for every German goal.
+```sql
+SELECT player, teamid, stadium, mdate
+FROM game INNER JOIN goal ON id=matchid
+WHERE teamid='GER'
+```
+
+4. Show the team1, team2 and player for every goal scored by a player called Mario player LIKE 'Mario%'
+```sql
+SELECT team1, team2, player
+FROM game INNER JOIN goal ON game.id=goal.matchid
+WHERE player LIKE 'Mario%'
+```
+
+5. Show player, teamid, coach, gtime for all goals scored in the first 10 minutes gtime<=10
+```sql
+SELECT player, teamid, coach, gtime
+FROM goal INNER JOIN eteam ON goal.teamid=eteam.id
+WHERE gtime<=10
+```
+
+6. List the dates of the matches and the name of the team in which 'Fernando Santos' was the team1 coach.
+```sql
+SELECT mdate, teamname
+FROM game INNER JOIN eteam ON game.team1=eteam.id
+WHERE coach='Fernando Santos'
+```
+
+7. List the player for every goal scored in a game where the stadium was 'National Stadium, Warsaw'
+```sql
+SELECT player
+FROM goal INNER JOIN game ON goal.matchid=game.id
+WHERE stadium='National Stadium, Warsaw'
+```
+
+8. Instead show the name of all players who scored a goal against Germany.
+```sql
+SELECT DISTINCT player
+FROM game JOIN goal ON game.id=goal.matchid
+WHERE teamid!='GER' AND (team1='GER' OR team2='GER')
+```
+
+9. Show teamname and the total number of goals scored.
+```sql
+SELECT teamname, COUNT(matchid)
+FROM eteam INNER JOIN goal ON eteam.id=goal.teamid
+GROUP BY teamname
+```
+
+10. Show the stadium and the number of goals scored in each stadium.
+```sql
+SELECT stadium, COUNT(matchid)
+FROM game INNER JOIN goal ON game.id=goal.matchid
+GROUP BY stadium
+```
+
+11. For every match involving 'POL', show the matchid, date and the number of goals scored.
+```sql
+SELECT matchid, mdate, COUNT(matchid)
+FROM game INNER JOIN goal ON matchid = id 
+WHERE (team1='POL' OR team2='POL')
+GROUP BY matchid, mdate
+```
+
+12. For every match where 'GER' scored, show matchid, match date and the number of goals scored by 'GER'
+```sql
+SELECT matchid, mdate, COUNT(matchid)
+FROM goal INNER JOIN game ON goal.matchid=game.id
+WHERE teamid='GER'
+GROUP BY matchid, mdate
+```
+
+13. List every match with the goals scored by each team as shown. This will use "CASE WHEN" which has not been explained in any previous exercises.
+```sql
+SELECT DISTINCT mdate, team1, SUM(CASE WHEN teamid=team1 THEN 1 ELSE 0 END) AS score1, team2, SUM(CASE WHEN teamid=team2 THEN 1 ELSE 0 END) AS score2
+FROM game LEFT JOIN goal ON game.id = goal.matchid
+GROUP BY id, mdate, team1, team2
+ORDER BY mdate, matchid, team1, team2
+```
+
+---
+
+## More JOIN
+1. List the films where the yr is 1962 [Show id, title]
+```sql
+SELECT id, title
+FROM movie
+WHERE yr=1962
+```
+
+2. Give year of 'Citizen Kane'.
+```sql
+SELECT yr
+FROM movie
+WHERE title='Citizen Kane'
+```
+
+3. List all of the Star Trek movies, include the id, title and yr (all of these movies include the words Star Trek in the title). Order results by year.
+```sql
+SELECT id, title, yr
+FROM movie
+WHERE title LIKE '%Star Trek%'
+ORDER BY yr
+```
+
+4. What id number does the actor 'Glenn Close' have?
+```sql
+SELECT id
+FROM actor
+WHERE name = 'Glenn Close'
+```
+
+5. What is the id of the film 'Casablanca'
+```sql
+SELECT id
+FROM movie
+WHERE title='Casablanca'
+```
+
+6. Obtain the cast list for 'Casablanca'.
+```sql
+SELECT name
+FROM movie INNER JOIN casting ON movie.id=casting.movieid
+INNER JOIN actor ON casting.actorid=actor.id
+WHERE movieid=11768
+```
+
+7. Obtain the cast list for the film 'Alien'
+```sql
+SELECT name
+FROM movie INNER JOIN casting ON movie.id=casting.movieid
+INNER JOIN actor ON casting.actorid=actor.id
+WHERE title='Alien'
+```
+
+8. List the films in which 'Harrison Ford' has appeared
+```sql
+SELECT title
+FROM movie INNER JOIN casting ON movie.id=casting.movieid
+INNER JOIN actor ON casting.actorid=actor.id
+WHERE name='Harrison Ford'
+```
+
+9. List the films where 'Harrison Ford' has appeared - but not in the starring role. [Note: the ord field of casting gives the position of the actor. If ord=1 then this actor is in the starring role]
+```sql
+SELECT title
+FROM movie INNER JOIN casting ON movie.id=casting.movieid
+INNER JOIN actor ON casting.actorid=actor.id
+WHERE name='Harrison Ford' AND ord!=1
+```
+
+10. List the films together with the leading star for all 1962 films.
+```sql
+SELECT title, name
+FROM movie INNER JOIN casting ON movie.id=casting.movieid
+INNER JOIN actor ON casting.actorid=actor.id
+WHERE yr=1962 AND ord=1
+```
+
+11. Which were the busiest years for 'Rock Hudson', show the year and the number of movies he made each year for any year in which he made more than 2 movies.
+```sql
+SELECT yr,COUNT(title) 
+FROM movie INNER JOIN casting ON movie.id=movieid
+INNER JOIN actor ON actorid=actor.id
+WHERE name='Rock Hudson'
+GROUP BY yr
+HAVING COUNT(title) > 2
+```
+
+12. List the film title and the leading actor for all of the films 'Julie Andrews' played in.
+```sql
+SELECT title, name 
+FROM casting INNER JOIN movie ON movie.id = movieid
+INNER JOIN actor ON actor.id = actorid
+WHERE ord = 1 AND movie.id IN
+ (SELECT movie.id FROM movie
+ INNER JOIN casting ON movie.id = movieid
+ INNER JOIN actor ON actor.id = actorid
+ WHERE actor.name = 'Julie Andrews')
+```
+
+13. Obtain a list, in alphabetical order, of actors who've had at least 15 starring roles.
+```sql
+SELECT DISTINCT name
+FROM casting INNER JOIN movie ON movie.id = movieid
+INNER JOIN actor ON actor.id = actorid
+WHERE actorid IN
+ (SELECT actorid
+ FROM casting
+ WHERE ord = 1
+ GROUP BY actorid
+ HAVING COUNT(actorid) >= 15)
+ORDER BY name
+```
+
+14. List the films released in the year 1978 ordered by the number of actors in the cast, then by title.
+```sql
+SELECT title, COUNT(actorid)
+FROM movie INNER JOIN casting ON movie.id=casting.movieid
+WHERE yr=1978
+GROUP BY title
+ORDER BY COUNT(actorid) DESC, title
+```
+
+15. List all the people who have worked with 'Art Garfunkel'.
+```sql
+SELECT DISTINCT name 
+FROM casting INNER JOIN actor ON actorid = actor.id
+WHERE name != 'Art Garfunkel' AND movieid IN
+ (SELECT movieid
+ FROM movie INNER JOIN casting ON movieid = movie.id
+ INNER JOIN actor ON actorid = actor.id
+ WHERE actor.name = 'Art Garfunkel')
+```
+
+---
+
+## Using NULL
+1. List the teachers who have NULL for their department.
+```sql
+SELECT name
+FROM teacher
+WHERE dept IS null
+```
+
+2. Note the INNER JOIN misses the teachers with no department and the departments with no teacher.
+```sql
+SELECT teacher.name, dept.name
+FROM teacher INNER JOIN dept ON (teacher.dept=dept.id)
+```
+
+3. Use a different JOIN so that all teachers are listed.
+```sql
+SELECT teacher.name, dept.name
+FROM teacher LEFT JOIN dept ON teacher.dept=dept.id
+```
+
+4. Use a different JOIN so that all departments are listed.
+```sql
+SELECT teacher.name, dept.name
+FROM teacher RIGHT JOIN dept ON teacher.dept=dept.id
+```
+
+5. Show teacher name and mobile number or '07986 444 2266'
+```sql
+SELECT name, COALESCE(mobile, '07986 444 2266')
+FROM teacher
+```
+
+6. Use the COALESCE function and a LEFT JOIN to print the teacher name and department name. Use the string 'None' where there is no department.
+```sql
+SELECT teacher.name, COALESCE(dept.name,'None')
+FROM teacher LEFT JOIN dept ON teacher.dept = dept.id
+```
+
+7. Use COUNT to show the number of teachers and the number of mobile phones.
+```sql
+SELECT COUNT(name), COUNT(mobile)
+FROM teacher
+```
+
+8. Use COUNT and GROUP BY dept.name to show each department and the number of staff. Use a RIGHT JOIN to ensure that the Engineering department is listed.
+```sql
+SELECT dept.name, COUNT(teacher.name)
+FROM teacher RIGHT JOIN dept ON teacher.dept=dept.id
+GROUP BY dept
+ORDER BY dept.name
+```
+
+9. Use CASE to show the name of each teacher followed by 'Sci' if the teacher is in dept 1 or 2 and 'Art' otherwise.
+```sql
+SELECT name, CASE WHEN dept IN (1,2) THEN 'Sci' ELSE 'Art' END
+FROM teacher
+```
+
+10. Use CASE to show the name of each teacher followed by 'Sci' if the teacher is in dept 1 or 2, show 'Art' if the teacher's dept is 3 and 'None' otherwise. 
+```sql
+SELECT name, CASE WHEN dept IN (1,2) THEN 'Sci' WHEN dept = 3 THEN 'Art' ELSE 'None' END
+FROM teacher
+```
+
+---
+
+## Self JOIN
+1. How many stops are in the database.
+```sql
+SELECT COUNT(id)
+FROM stops
+```
+
+2. Find the id value for the stop 'Craiglockhart'
+```sql
+SELECT id
+FROM stops
+WHERE name='Craiglockhart'
+```
+
+3. Give the id and the name for the stops on the '4' 'LRT' service.
+```sql
+SELECT id, name 
+FROM stops INNER JOIN route ON stops.id=route.stop
+WHERE company='LRT' AND num=4
+```
+
+4. The query shown gives the number of routes that visit either London Road (149) or Craiglockhart (53). Run the query and notice the two services that link these stops have a count of 2. Add a HAVING clause to restrict the output to these two routes.
+```sql
+SELECT company, num, COUNT(*)
+FROM route WHERE stop=149 OR stop=53
+GROUP BY company, num
+HAVING COUNT(*)>=2
+```
+
+5. Execute the self join shown and observe that b.stop gives all the places you can get to from Craiglockhart, without changing routes. Change the query so that it shows the services from Craiglockhart to London Road.
+```sql
+SELECT a.company, a.num, a.stop, b.stop
+FROM route a JOIN route b ON (a.company=b.company AND a.num=b.num)
+WHERE a.stop=53 AND b.stop=149
+```
+
+6. The query shown is similar to the previous one, however by joining two copies of the stops table we can refer to stops by name rather than by number. Change the query so that the services between 'Craiglockhart' and 'London Road' are shown. If you are tired of these places try 'Fairmilehead' against 'Tollcross'
+```sql
+SELECT a.company, a.num, stopa.name, stopb.name
+FROM route a JOIN route b ON
+  (a.company=b.company AND a.num=b.num)
+  JOIN stops stopa ON (a.stop=stopa.id)
+  JOIN stops stopb ON (b.stop=stopb.id)
+WHERE stopa.name='fairmilehead' AND stopb.name='tollcross'
+```
+
+7. Give a list of all the services which connect stops 115 and 137 ('Haymarket' and 'Leith')
+```sql
+SELECT a.company, a.num  
+FROM route a JOIN route b ON a.num = b.num
+WHERE a.stop = 115 AND b.stop = 137
+GROUP BY num
+```
+
+8. Give a list of the services which connect the stops 'Craiglockhart' and 'Tollcross'
+```sql
+SELECT a.company, a.num
+FROM route a INNER JOIN route b ON (a.num = b.num)
+INNER JOIN stops stopa ON (a.stop = stopa.id)
+INNER JOIN stops stopb ON (b.stop = stopb.id)
+WHERE stopa.name='Craiglockhart' AND stopb.name='Tollcross'
+```
+
+9. Give a distinct list of the stops which may be reached from 'Craiglockhart' by taking one bus, including 'Craiglockhart' itself, offered by the LRT company. Include the company and bus no. of the relevant services.
+```sql
+SELECT DISTINCT stopa.name, a.company, a.num
+FROM route a INNER JOIN route b ON a.num=b.num
+INNER JOIN stops stopa ON stopa.id = a.stop
+INNER JOIN stops stopb ON stopb.id = b.stop
+WHERE stopb.name='Craiglockhart' AND a.company='LRT'
+```
+
+10. Find the routes involving two buses that can go from Craiglockhart to Lochend.
+Show the bus no. and company for the first bus, the name of the stop for the transfer,
+and the bus no. and company for the second bus.
+```sql
+
+```
