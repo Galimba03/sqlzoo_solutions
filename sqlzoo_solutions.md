@@ -497,7 +497,7 @@ WHERE title='Casablanca'
 ```sql
 SELECT name
 FROM movie INNER JOIN casting ON movie.id=casting.movieid
-INNER JOIN actor ON casting.actorid=actor.id
+ INNER JOIN actor ON casting.actorid=actor.id
 WHERE movieid=11768
 ```
 
@@ -505,7 +505,7 @@ WHERE movieid=11768
 ```sql
 SELECT name
 FROM movie INNER JOIN casting ON movie.id=casting.movieid
-INNER JOIN actor ON casting.actorid=actor.id
+ INNER JOIN actor ON casting.actorid=actor.id
 WHERE title='Alien'
 ```
 
@@ -513,7 +513,7 @@ WHERE title='Alien'
 ```sql
 SELECT title
 FROM movie INNER JOIN casting ON movie.id=casting.movieid
-INNER JOIN actor ON casting.actorid=actor.id
+ INNER JOIN actor ON casting.actorid=actor.id
 WHERE name='Harrison Ford'
 ```
 
@@ -521,7 +521,7 @@ WHERE name='Harrison Ford'
 ```sql
 SELECT title
 FROM movie INNER JOIN casting ON movie.id=casting.movieid
-INNER JOIN actor ON casting.actorid=actor.id
+ INNER JOIN actor ON casting.actorid=actor.id
 WHERE name='Harrison Ford' AND ord!=1
 ```
 
@@ -529,7 +529,7 @@ WHERE name='Harrison Ford' AND ord!=1
 ```sql
 SELECT title, name
 FROM movie INNER JOIN casting ON movie.id=casting.movieid
-INNER JOIN actor ON casting.actorid=actor.id
+ INNER JOIN actor ON casting.actorid=actor.id
 WHERE yr=1962 AND ord=1
 ```
 
@@ -537,7 +537,7 @@ WHERE yr=1962 AND ord=1
 ```sql
 SELECT yr,COUNT(title) 
 FROM movie INNER JOIN casting ON movie.id=movieid
-INNER JOIN actor ON actorid=actor.id
+ INNER JOIN actor ON actorid=actor.id
 WHERE name='Rock Hudson'
 GROUP BY yr
 HAVING COUNT(title) > 2
@@ -547,7 +547,7 @@ HAVING COUNT(title) > 2
 ```sql
 SELECT title, name 
 FROM casting INNER JOIN movie ON movie.id = movieid
-INNER JOIN actor ON actor.id = actorid
+ INNER JOIN actor ON actor.id = actorid
 WHERE ord = 1 AND movie.id IN
  (SELECT movie.id FROM movie
  INNER JOIN casting ON movie.id = movieid
@@ -559,7 +559,7 @@ WHERE ord = 1 AND movie.id IN
 ```sql
 SELECT DISTINCT name
 FROM casting INNER JOIN movie ON movie.id = movieid
-INNER JOIN actor ON actor.id = actorid
+ INNER JOIN actor ON actor.id = actorid
 WHERE actorid IN
  (SELECT actorid
  FROM casting
@@ -696,11 +696,10 @@ WHERE a.stop=53 AND b.stop=149
 6. The query shown is similar to the previous one, however by joining two copies of the stops table we can refer to stops by name rather than by number. Change the query so that the services between 'Craiglockhart' and 'London Road' are shown. If you are tired of these places try 'Fairmilehead' against 'Tollcross'
 ```sql
 SELECT a.company, a.num, stopa.name, stopb.name
-FROM route a JOIN route b ON
-  (a.company=b.company AND a.num=b.num)
-  JOIN stops stopa ON (a.stop=stopa.id)
-  JOIN stops stopb ON (b.stop=stopb.id)
-WHERE stopa.name='fairmilehead' AND stopb.name='tollcross'
+FROM route a INNER JOIN route b ON (a.company=b.company AND a.num=b.num)
+ INNER JOIN stops stopa ON (a.stop=stopa.id)
+ INNER JOIN stops stopb ON (b.stop=stopb.id)
+WHERE stopa.name='Craiglockhart' AND stopb.name='London Road'
 ```
 
 7. Give a list of all the services which connect stops 115 and 137 ('Haymarket' and 'Leith')
@@ -715,8 +714,8 @@ GROUP BY num
 ```sql
 SELECT a.company, a.num
 FROM route a INNER JOIN route b ON (a.num = b.num)
-INNER JOIN stops stopa ON (a.stop = stopa.id)
-INNER JOIN stops stopb ON (b.stop = stopb.id)
+ INNER JOIN stops stopa ON (a.stop = stopa.id)
+ INNER JOIN stops stopb ON (b.stop = stopb.id)
 WHERE stopa.name='Craiglockhart' AND stopb.name='Tollcross'
 ```
 
@@ -724,8 +723,8 @@ WHERE stopa.name='Craiglockhart' AND stopb.name='Tollcross'
 ```sql
 SELECT DISTINCT stopa.name, a.company, a.num
 FROM route a INNER JOIN route b ON a.num=b.num
-INNER JOIN stops stopa ON stopa.id = a.stop
-INNER JOIN stops stopb ON stopb.id = b.stop
+ INNER JOIN stops stopa ON stopa.id = a.stop
+ INNER JOIN stops stopb ON stopb.id = b.stop
 WHERE stopb.name='Craiglockhart' AND a.company='LRT'
 ```
 
@@ -733,5 +732,12 @@ WHERE stopb.name='Craiglockhart' AND a.company='LRT'
 Show the bus no. and company for the first bus, the name of the stop for the transfer,
 and the bus no. and company for the second bus.
 ```sql
-
+SELECT a.num, a.company, stopb.name, c.num, c.company
+FROM route a INNER JOIN route b ON (a.company = b.company AND a.num = b.num)
+ INNER JOIN (route c JOIN route d ON (c.company = d.company AND c.num = d.num))
+ INNER JOIN stops stopa ON a.stop = stopa.id
+ INNER JOIN stops stopb ON b.stop = stopb.id
+ INNER JOIN stops stopc ON c.stop = stopc.id
+ INNER JOIN stops stopd ON d.stop = stopd.id
+WHERE stopa.name = 'Craiglockhart' AND stopd.name = 'Lochend' AND stopb.name = stopc.name
 ```
